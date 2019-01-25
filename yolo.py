@@ -30,33 +30,32 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     boxes -- tensor of shape (None, 4), containing (b_x, b_y, b_h, b_w) coordinates of selected boxes
     classes -- tensor of shape (None,), containing the index of the class detected by the selected boxes
     
-    Note: "None" is here because you don't know the exact number of selected boxes, as it depends on the threshold. 
-    For example, the actual output size of scores would be (10,) if there are 10 boxes.
+    
     """
     
     # Step 1: Compute box scores
-    ### START CODE HERE ### (≈ 1 line)
+    
     box_scores = np.multiply(box_confidence, box_class_probs)
-    ### END CODE HERE ###
+  
     
     # Step 2: Find the box_classes thanks to the max box_scores, keep track of the corresponding score
-    ### START CODE HERE ### (≈ 2 lines)
+    
     box_classes = K.argmax(box_scores, axis=-1)
     box_class_scores = K.max(box_scores, axis=-1)
-    ### END CODE HERE ###
+    
     
     # Step 3: Create a filtering mask based on "box_class_scores" by using "threshold". The mask should have the
     # same dimension as box_class_scores, and be True for the boxes you want to keep (with probability >= threshold)
-    ### START CODE HERE ### (≈ 1 line)
+   
     filtering_mask = K.greater_equal(box_class_scores, threshold)
-    ### END CODE HERE ###
+    
     
     # Step 4: Apply the mask to scores, boxes and classes
-    ### START CODE HERE ### (≈ 3 lines)
+    
     scores = tf.boolean_mask(box_class_scores, filtering_mask)
     boxes = tf.boolean_mask(boxes, filtering_mask)
     classes = tf.boolean_mask(box_classes, filtering_mask)
-    ### END CODE HERE ###
+    
     
     return scores, boxes, classes
    
@@ -70,25 +69,25 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     """
 
     # Calculate the (y1, x1, y2, x2) coordinates of the intersection of box1 and box2. Calculate its Area.
-    ### START CODE HERE ### (≈ 5 lines)
+    
     xi1 = max(box1[0], box2[0])
     yi1 = max(box1[1], box2[1])
     xi2 = min(box1[2], box2[2])
     yi2 = min(box1[3], box2[3])
     inter_area = (xi2 - xi1)*(yi2 - yi1)
-    ### END CODE HERE ###    
+     
 
     # Calculate the Union area by using Formula: Union(A,B) = A + B - Inter(A,B)
-    ### START CODE HERE ### (≈ 3 lines)
+    
     box1_area = (box1[3] - box1[1])*(box1[2]- box1[0])
     box2_area = (box2[3] - box2[1])*(box2[2]- box2[0])
     union_area = (box1_area + box2_area) - inter_area
-    ### END CODE HERE ###
+    
     
     # compute the IoU
-    ### START CODE HERE ### (≈ 1 line)
+  
     iou = inter_area / union_area
-    ### END CODE HERE ###
+    
 
     return iou
     
@@ -117,17 +116,17 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     K.get_session().run(tf.variables_initializer([max_boxes_tensor])) # initialize variable max_boxes_tensor
     
     # Use tf.image.non_max_suppression() to get the list of indices corresponding to boxes you keep
-    ### START CODE HERE ### (≈ 1 line)
+    
     nms_indices = tf.image.non_max_suppression(boxes, scores, max_boxes_tensor, iou_threshold=iou_threshold)
 
-    ### END CODE HERE ###
+    
     
     # Use K.gather() to select only nms_indices from scores, boxes and classes
-    ### START CODE HERE ### (≈ 3 lines)
+   
     scores = K.gather(scores, nms_indices)
     boxes = K.gather(boxes, nms_indices)
     classes = K.gather(classes, nms_indices)
-    ### END CODE HERE ###
+   
     
     return scores, boxes, classes
     
@@ -152,7 +151,7 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     classes -- tensor of shape (None,), predicted class for each box
     """
     
-    ### START CODE HERE ### 
+  
     
     # Retrieve outputs of the YOLO model (≈1 line)
     box_confidence, box_xy, box_wh, box_class_probs = yolo_outputs
@@ -169,7 +168,7 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     # Use one of the functions you've implemented to perform Non-max suppression with a threshold of iou_threshold (≈1 line)
     scores, boxes, classes = yolo_non_max_suppression(scores, boxes, classes, max_boxes = max_boxes, iou_threshold = iou_threshold)
     
-    ### END CODE HERE ###
+    
     
     return scores, boxes, classes
     
@@ -201,17 +200,15 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     out_boxes -- tensor of shape (None, 4), coordinates of the predicted boxes
     out_classes -- tensor of shape (None, ), class index of the predicted boxes
     
-    Note: "None" actually represents the number of predicted boxes, it varies between 0 and max_boxes. 
+    
     """
 
     # Preprocess your image
     image, image_data = preprocess_image("images/" + image_file, model_image_size = (608, 608))
 
-    # Run the session with the correct tensors and choose the correct placeholders in the feed_dict.
-    # You'll need to use feed_dict={yolo_model.input: ... , K.learning_phase(): 0})
-    ### START CODE HERE ### (≈ 1 line)
+    # Run the session with the correct tensors and choose the correct placeholders in the feed_dict.=  
     out_scores, out_boxes, out_classes = sess.run([scores, boxes, classes], feed_dict={yolo_model.input: image_data, K.learning_phase(): 0})
-    ### END CODE HERE ###
+   
 
     # Print predictions info
     print('Found {} boxes for {}'.format(len(out_boxes), image_file))
@@ -221,7 +218,7 @@ def yolo_filter_boxes(box_confidence, boxes, box_class_probs, threshold = .6):
     draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors)
     # Save the predicted bounding box on the image
     image.save(os.path.join("out", image_file), quality=90)
-    # Display the results in the notebook
+    # Display the results
     output_image = scipy.misc.imread(os.path.join("out", image_file))
     imshow(output_image)
     
